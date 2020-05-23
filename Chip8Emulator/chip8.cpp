@@ -135,8 +135,7 @@ void Chip8::emulateCycle() {
     opcode = memory[pc] << 8 | memory[pc + 1];
 
     // Decode opcode
-    //OpcodeFunction func = opcodes.at(opcode);
-    //func;
+    ((*this).*(table[(opcode & 0xF000u) >> 12u]))();
 
     // Update timers
     if (delay_timer > 0)
