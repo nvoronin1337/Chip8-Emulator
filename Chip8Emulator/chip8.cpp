@@ -28,25 +28,6 @@ const uint8_t chip8_fontset[FONTSET] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-void Chip8::loadProgram(const char* filename) {
-    std::ifstream file(filename, std::ios::binary | std::ios::ate);
-
-    if (file.is_open()) {
-        std::streampos size = file.tellg();
-        char* buffer = new char[size];
-
-        file.seekg(0, std::ios::beg);
-        file.read(buffer, size);
-        file.close();
-
-        for (long i = 0; i < size; i++) {
-            memory[START_ADDRESS + i] = buffer[i];
-        }
-
-        delete[] buffer;
-    }
-}
-
 void Chip8::Table0() {
     ((*this).*(table0[opcode & 0x000Fu]))();
 }
@@ -113,8 +94,7 @@ void Chip8::initialize() {
     opcode = 0;
     I = 0;
     sp = 0;
-    setupOpcodeTables();
-
+    
     // Clear display
     // Clear stack
     // Clear registers V0-VF
@@ -131,11 +111,33 @@ void Chip8::initialize() {
     for (unsigned int i = 0; i < FONTSET; i++) {
         memory[FONTSET_START_ADDRESS + i] = chip8_fontset[i];
     }
+
+    assert(FONTSET_START_ADDRESS + sizeof chip8_fontset < START_ADDRESS);
+    setupOpcodeTables();
+}
+
+void Chip8::loadProgram(const char* filename) {
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+
+    if (file.is_open()) {
+        std::streampos size = file.tellg();
+        char* buffer = new char[size];
+
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, size);
+        file.close();
+
+        for (long i = 0; i < size; i++) {
+            memory[START_ADDRESS + i] = buffer[i];
+        }
+
+        delete[] buffer;
+    }
 }
 
 void Chip8::emulateCycle() {
     // Fetch opcode
-    opcode = memory[pc] << 8 | memory[pc + 1];
+    opcode = memory[pc] << 8 | memory[pc + 1];  
 
     // Decode and Execute
     ((*this).*(table[(opcode & 0xF000u) >> 12u]))();
@@ -167,3 +169,31 @@ void Chip8::setupInput() {
 void Chip8::drawGraphics() {
 
 }
+
+void Chip8::exec00E0() {
+    memset(gfx, 0, sizeof gfx);
+}
+
+void Chip8::exec00EE() {
+    pc = stack[sp];
+    --sp;
+}
+
+void Chip8::exec1NNN() {
+    pc = opcode & 0x0FFFu;
+}
+
+void Chip8::exec2NNN() {
+    stack[sp] = pc;
+    ++sp;
+    pc = opcode & 0x0FFFu;
+}
+
+void Chip8::exec3XNN() {
+    uint16_t Vx = (opcode & 0x0F00u) >> 8u;
+    uint16_t NN = opcode & 0x00FFu;
+    if (V[Vx] == NN) {
+        pc += 2;
+    }
+}
+    

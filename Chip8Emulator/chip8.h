@@ -6,6 +6,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <cstdint>
+#include <assert.h>
 
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int REGISTERS = 16;  
@@ -13,9 +14,6 @@ const unsigned int RESOLUTION = 2048;
 const unsigned int STACK_LEVELS = 16;
 const unsigned int KEYS = 16;
 const unsigned int FONTSET = 80;
-const unsigned int INCREMENT = 2;
-
-const char* UNKNOWN_OPCODE = "Unknown opcode [0x0000]: 0X%X\n";
 
 /**
  * System memory map
@@ -46,7 +44,6 @@ private:
 
     bool drawFlag = false;
 
-public:
     //opcode functions
     void op_null() {};
 
@@ -55,35 +52,35 @@ public:
     void exec1NNN();
     void exec2NNN();
     void exec3XNN();
-    void exec4XNN();
-    void exec5XY0();
-    void exec6XNN();
-    void exec7XNN();
-    void exec8XY0();
-    void exec8XY1();
-    void exec8XY2();
-    void exec8XY3();
-    void exec8XY4();
-    void exec8XY5();
-    void exec8XY6();
-    void exec8XY7();
-    void exec8XYE();
-    void exec9XY0();
-    void execANNN();
-    void execBNNN();
-    void execCXNN();
-    void execDXYN();
-    void execEX9E();
-    void execEXA1();
-    void execFX07();
-    void execFX0A();
-    void execFX15();
-    void execFX18();
-    void execFX1E();
-    void execFX29();
-    void execFX33();
-    void execFX55();
-    void execFX65();
+    void exec4XNN() {};
+    void exec5XY0() {};
+    void exec6XNN() {};
+    void exec7XNN() {};
+    void exec8XY0() {};
+    void exec8XY1() {};
+    void exec8XY2() {};
+    void exec8XY3() {};
+    void exec8XY4() {};
+    void exec8XY5() {};
+    void exec8XY6() {};
+    void exec8XY7() {};
+    void exec8XYE() {};
+    void exec9XY0() {};
+    void execANNN() {};
+    void execBNNN() {};
+    void execCXNN() {};
+    void execDXYN() {};
+    void execEX9E() {};
+    void execEXA1() {};
+    void execFX07() {};
+    void execFX0A() {};
+    void execFX15() {};
+    void execFX18() {};
+    void execFX1E() {};
+    void execFX29() {};
+    void execFX33() {};
+    void execFX55() {};
+    void execFX65() {};
 
     void Table0();
     void Table8();
@@ -97,6 +94,7 @@ public:
     OpcodeFunction tableE[0xE + 1] = { &Chip8::op_null };
     OpcodeFunction tableF[0x65 + 1] = { &Chip8::op_null };
 
+public:
     void initialize();
     void setupOpcodeTables();
     void loadProgram(const char* filename);

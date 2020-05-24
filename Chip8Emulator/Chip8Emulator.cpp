@@ -5,6 +5,14 @@
 #include <stdexcept>
 #include "chip8.h"
 
+
+// DEBUGGING 
+#define DEBUG
+#ifdef DEBUG
+#include <iostream>
+#define deb(x) std::cout << x << "\n"
+#endif
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         throw std::invalid_argument("Please specify a program to execute!");
