@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     else {
         Chip8 chip8;
         chip8.initialize();
+        chip8.loadProgram(argv[1]);
     }
     return EXIT_SUCCESS;
 }

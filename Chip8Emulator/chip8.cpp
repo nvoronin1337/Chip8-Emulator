@@ -28,7 +28,6 @@ const uint8_t chip8_fontset[FONTSET] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-
 void Chip8::loadProgram(const char* filename) {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
@@ -63,7 +62,6 @@ void Chip8::TableE() {
 void Chip8::TableF() {
     ((*this).*(tableF[opcode & 0x00FFu]))();
 }
-
 
 void Chip8::setupOpcodeTables() {
     table[0x0] = &Chip8::Table0;
@@ -110,31 +108,36 @@ void Chip8::setupOpcodeTables() {
     tableF[0x65] = &Chip8::execFX65;
 }
 
-
 void Chip8::initialize() {
     pc = START_ADDRESS;
     opcode = 0;
     I = 0;
     sp = 0;
-
     setupOpcodeTables();
 
     // Clear display
     // Clear stack
     // Clear registers V0-VF
     // Clear memory
+    memset(gfx, 0, sizeof(gfx));
+    memset(stack, 0, sizeof(stack));
+    memset(V, 0, sizeof(V));
+    memset(memory, 0, sizeof(memory));
+
+    // Reset timers
+    delay_timer = 0;
+    sound_timer = 0;
 
     for (unsigned int i = 0; i < FONTSET; i++) {
         memory[FONTSET_START_ADDRESS + i] = chip8_fontset[i];
     }
-    // Reset timers
 }
 
 void Chip8::emulateCycle() {
     // Fetch opcode
     opcode = memory[pc] << 8 | memory[pc + 1];
 
-    // Decode opcode
+    // Decode and Execute
     ((*this).*(table[(opcode & 0xF000u) >> 12u]))();
 
     // Update timers
@@ -150,5 +153,17 @@ void Chip8::emulateCycle() {
 }
 
 void Chip8::setKeys() {
+
+}
+
+void Chip8::setupGraphics() {
+
+}
+
+void Chip8::setupInput() {
+
+}
+
+void Chip8::drawGraphics() {
 
 }

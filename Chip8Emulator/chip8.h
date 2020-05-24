@@ -8,7 +8,7 @@
 #include <cstdint>
 
 const unsigned int MEMORY_SIZE = 4096;
-const unsigned int REGISTERS = 16;
+const unsigned int REGISTERS = 16;  
 const unsigned int RESOLUTION = 2048;
 const unsigned int STACK_LEVELS = 16;
 const unsigned int KEYS = 16;
@@ -25,8 +25,6 @@ const char* UNKNOWN_OPCODE = "Unknown opcode [0x0000]: 0X%X\n";
 */
 
 class Chip8 {
-   
-
 private:
     uint16_t opcode;
     uint8_t memory[MEMORY_SIZE]{};
@@ -51,6 +49,7 @@ private:
 public:
     //opcode functions
     void op_null() {};
+
     void exec00E0();
     void exec00EE();
     void exec1NNN();
@@ -92,11 +91,11 @@ public:
     void TableF();
 
     typedef void (Chip8::* OpcodeFunction)();
-    OpcodeFunction table[0xF + 1]{ &Chip8::op_null };
-    OpcodeFunction table0[0xE + 1]{ &Chip8::op_null };
-    OpcodeFunction table8[0xE + 1]{ &Chip8::op_null };
-    OpcodeFunction tableE[0xE + 1]{ &Chip8::op_null };
-    OpcodeFunction tableF[0x65 + 1]{ &Chip8::op_null };
+    OpcodeFunction table[0xF + 1] = { &Chip8::op_null };
+    OpcodeFunction table0[0xE + 1] = { &Chip8::op_null };
+    OpcodeFunction table8[0xE + 1] = { &Chip8::op_null };
+    OpcodeFunction tableE[0xE + 1] = { &Chip8::op_null };
+    OpcodeFunction tableF[0x65 + 1] = { &Chip8::op_null };
 
     void initialize();
     void setupOpcodeTables();
@@ -108,5 +107,4 @@ public:
     static void setupInput();
     static void drawGraphics();
 };
-
 #endif
