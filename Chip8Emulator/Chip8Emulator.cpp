@@ -5,10 +5,10 @@
 #include <stdexcept>
 #include "chip8.h"
 
-
 // DEBUGGING 
-#define DEBUG
-#ifdef DEBUG
+#define DEBUG 1
+#if DEBUG 
+#define TEST_PROGRAM "Airplane.ch8"
 #include <iostream>
 #define deb(x) std::cout << x << "\n"
 #endif
@@ -22,6 +22,16 @@ int main(int argc, char* argv[]) {
         Chip8 chip8;
         chip8.initialize();
         chip8.loadProgram(argv[1]);
+
+        while (true) {
+            chip8.emulateCycle();
+            if (chip8.getDrawFlag()) {
+                chip8.drawGraphics();
+            }
+
+            chip8.setKeys();
+        }
+        
     }
     return EXIT_SUCCESS;
 }

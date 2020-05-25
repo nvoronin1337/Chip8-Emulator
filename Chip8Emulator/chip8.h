@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <assert.h>
 
+#include <iostream>
+
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int REGISTERS = 16;  
 const unsigned int RESOLUTION = 2048;
@@ -45,33 +47,38 @@ private:
     bool drawFlag = false;
 
     //opcode functions
-    void op_null() {};
+    void op_null() { };
 
     void exec00E0();
     void exec00EE();
+
     void exec1NNN();
     void exec2NNN();
     void exec3XNN();
-    void exec4XNN() {};
-    void exec5XY0() {};
-    void exec6XNN() {};
-    void exec7XNN() {};
-    void exec8XY0() {};
-    void exec8XY1() {};
-    void exec8XY2() {};
-    void exec8XY3() {};
-    void exec8XY4() {};
-    void exec8XY5() {};
-    void exec8XY6() {};
-    void exec8XY7() {};
-    void exec8XYE() {};
+    void exec4XNN();
+    void exec5XY0();
+    void exec6XNN();
+    void exec7XNN();
+
+    void exec8XY0();
+    void exec8XY1();
+    void exec8XY2();
+    void exec8XY3();
+    void exec8XY4();
+    void exec8XY5();
+    void exec8XY6();
+    void exec8XY7();
+    void exec8XYE();
+
     void exec9XY0() {};
     void execANNN() {};
     void execBNNN() {};
     void execCXNN() {};
     void execDXYN() {};
+
     void execEX9E() {};
     void execEXA1() {};
+
     void execFX07() {};
     void execFX0A() {};
     void execFX15() {};
@@ -101,8 +108,10 @@ public:
     void emulateCycle();
     void setKeys();
 
-    static void setupGraphics();
-    static void setupInput();
-    static void drawGraphics();
+    void setupGraphics();
+    void setupInput();
+    void drawGraphics();
+
+    bool getDrawFlag() const;
 };
 #endif

@@ -28,6 +28,10 @@ const uint8_t chip8_fontset[FONTSET] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
+bool Chip8::getDrawFlag() const {
+    return drawFlag;
+}
+
 void Chip8::Table0() {
     ((*this).*(table0[opcode & 0x000Fu]))();
 }
@@ -139,6 +143,8 @@ void Chip8::emulateCycle() {
     // Fetch opcode
     opcode = memory[pc] << 8 | memory[pc + 1];  
 
+    pc += 2;
+
     // Decode and Execute
     ((*this).*(table[(opcode & 0xF000u) >> 12u]))();
 
@@ -168,19 +174,24 @@ void Chip8::setupInput() {
 
 void Chip8::drawGraphics() {
 
+    drawFlag = 0;
 }
 
 void Chip8::exec00E0() {
     memset(gfx, 0, sizeof gfx);
+    drawFlag = 1;
+    std::cout << "exec 00E0\n";
 }
 
 void Chip8::exec00EE() {
-    pc = stack[sp];
     --sp;
+    pc = stack[sp];
+    std::cout << "exec 00EE\n";
 }
 
 void Chip8::exec1NNN() {
     pc = opcode & 0x0FFFu;
+    std::cout << "exec 1NNN\n";
 }
 
 void Chip8::exec2NNN() {
@@ -190,10 +201,124 @@ void Chip8::exec2NNN() {
 }
 
 void Chip8::exec3XNN() {
-    uint16_t Vx = (opcode & 0x0F00u) >> 8u;
-    uint16_t NN = opcode & 0x00FFu;
-    if (V[Vx] == NN) {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t NN = opcode & 0x00FFu;
+    if (V[X] == NN) {
         pc += 2;
     }
+}
+
+void Chip8::exec4XNN() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t NN = opcode & 0x00FFu;
+    if (V[X] != NN) {
+        pc += 2;
+    }
+}
+
+void Chip8::exec5XY0() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x0F0) >> 4u;
+
+    if (V[X] == V[Y]) {
+        pc += 2;
+    }
+}
+
+void Chip8::exec6XNN() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t NN = (opcode & 0x00FF);
+
+    V[X] = NN;
+}
+
+void Chip8::exec7XNN() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t NN = (opcode & 0x00FF);
+
+    V[X] += NN;
+}
+
+void Chip8::exec8XY0() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    V[X] = V[Y];
+}
+
+void Chip8::exec8XY1() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    V[X] |= V[Y];
+}
+
+void Chip8::exec8XY2() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    V[X] &= V[Y];
+}
+
+void Chip8::exec8XY3() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    V[X] ^= V[Y];
+}
+
+void Chip8::exec8XY4() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    uint16_t sum = V[X] + V[Y];
+    if (sum > 255u) {
+        V[0xF] = 1;
+    }
+    else {
+        V[0xF] = 0;
+    }
+
+    V[X] = sum & 0xFFu;
+}
+
+void Chip8::exec8XY5() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    
+    if (V[X] > V[Y]) {
+        V[0xF] = 1;
+    }
+    else {
+        V[0xF] = 0;
+    }
+
+    V[X] -= V[Y];
+}
+
+void Chip8::exec8XY6() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+
+    V[0xF] = (V[X] & 0x1u);
+    V[X] >>= 1;
+}
+
+void Chip8::exec8XY7() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    if (V[Y] > V[X]) {
+        V[0xF] = 1;
+    }
+    else {
+        V[0xF] = 0;
+    }
+}
+
+void Chip8::exec8XYE() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+
+    V[0xF] = (V[X] & 0x1u);
+    V[X] << 1;
 }
     
