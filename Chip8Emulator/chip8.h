@@ -7,8 +7,9 @@
 #include <unordered_map>
 #include <cstdint>
 #include <assert.h>
-
-#include <iostream>
+#include <time.h>
+#include <cstring>
+//#include <iostream>
 
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int REGISTERS = 16;  
@@ -42,12 +43,12 @@ private:
     uint16_t stack[STACK_LEVELS];
     uint8_t sp;
 
-    uint8_t key[KEYS];
+    uint8_t keypad[KEYS];
 
     bool drawFlag = false;
 
     //opcode functions
-    void op_null() { };
+    void op_null() { printf("Unknown opcode\n"); };
 
     void exec00E0();
     void exec00EE();
@@ -69,25 +70,25 @@ private:
     void exec8XY6();
     void exec8XY7();
     void exec8XYE();
+    void exec9XY0();
 
-    void exec9XY0() {};
-    void execANNN() {};
-    void execBNNN() {};
-    void execCXNN() {};
-    void execDXYN() {};
+    void execANNN();
+    void execBNNN();
+    void execCXNN();
+    void execDXYN();
 
-    void execEX9E() {};
-    void execEXA1() {};
+    void execEX9E();
+    void execEXA1();
 
-    void execFX07() {};
-    void execFX0A() {};
-    void execFX15() {};
-    void execFX18() {};
-    void execFX1E() {};
-    void execFX29() {};
-    void execFX33() {};
-    void execFX55() {};
-    void execFX65() {};
+    void execFX07();
+    void execFX0A();
+    void execFX15();
+    void execFX18();
+    void execFX1E();
+    void execFX29();
+    void execFX33();
+    void execFX55();
+    void execFX65();
 
     void Table0();
     void Table8();
@@ -106,8 +107,8 @@ public:
     void setupOpcodeTables();
     void loadProgram(const char* filename);
     void emulateCycle();
+    
     void setKeys();
-
     void setupGraphics();
     void setupInput();
     void drawGraphics();

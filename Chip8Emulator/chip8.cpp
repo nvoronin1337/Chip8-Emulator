@@ -3,6 +3,8 @@
 const unsigned int START_ADDRESS = 0x200;
 const unsigned int FONTSET_START_ADDRESS = 0x50;
 
+const int SPRAY_LENGTH = 8;
+
 const char* FILE_MODE = "rb";
 
 const int FILE_ERROR = 1;
@@ -27,10 +29,6 @@ const uint8_t chip8_fontset[FONTSET] = {
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
-
-bool Chip8::getDrawFlag() const {
-    return drawFlag;
-}
 
 void Chip8::Table0() {
     ((*this).*(table0[opcode & 0x000Fu]))();
@@ -157,41 +155,24 @@ void Chip8::emulateCycle() {
             printf("BEEP!\n");
             --sound_timer;
         }
+        else {
+            printf("NO BEEP!\n");
+        }
     }
-}
-
-void Chip8::setKeys() {
-
-}
-
-void Chip8::setupGraphics() {
-
-}
-
-void Chip8::setupInput() {
-
-}
-
-void Chip8::drawGraphics() {
-
-    drawFlag = 0;
 }
 
 void Chip8::exec00E0() {
     memset(gfx, 0, sizeof gfx);
     drawFlag = 1;
-    std::cout << "exec 00E0\n";
 }
 
 void Chip8::exec00EE() {
     --sp;
     pc = stack[sp];
-    std::cout << "exec 00EE\n";
 }
 
 void Chip8::exec1NNN() {
     pc = opcode & 0x0FFFu;
-    std::cout << "exec 1NNN\n";
 }
 
 void Chip8::exec2NNN() {
@@ -321,4 +302,163 @@ void Chip8::exec8XYE() {
     V[0xF] = (V[X] & 0x1u);
     V[X] << 1;
 }
+
+void Chip8::exec9XY0() {
+    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t Y = (opcode & 0x00F0) >> 4u;
+
+    if (V[X] != V[Y]) {
+        pc += 2;
+    }
+}
     
+void Chip8::execANNN() {
+    uint16_t NNN = opcode & 0x0FFFu;
+    I = NNN;
+}
+
+void Chip8::execBNNN() {
+    uint16_t NNN = opcode & 0x0FFFu;
+    pc = NNN + V[0];
+}
+
+void Chip8::execCXNN() {
+    srand(time(0));
+    uint8_t rand_byte = rand() % 255 + 1;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t NN = opcode & 0x00FFu;
+    V[X] = NN & rand_byte;
+}
+
+void Chip8::execDXYN() {
+    // draws sprite
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
+    uint8_t height = opcode & 0x000Fu;
+    uint8_t pixel;
+
+    V[0xF] = 0;
+    for (int row = 0; row < height; row++) {
+        pixel = memory[I + row];
+        for (int col = 0; col < SPRAY_LENGTH; col++) {
+            if ((pixel & (0x80 >> col)) != 0) {
+                if (gfx[X + col + ((Y + row) * 64)] == 1) 
+                    V[0xF] = 0;
+                gfx[X + col + ((Y + row) * 64)] ^= 1;
+            }
+        }
+    }
+
+    drawFlag = true;
+}
+
+void Chip8::execEX9E() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t key = V[X];
+    if (keypad[key]) {
+        pc += 2;
+    }
+}
+
+void Chip8::execEXA1() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t key = V[X];
+    if (!keypad[key]) {
+        pc += 2;
+    }
+}
+
+void Chip8::execFX07() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    V[X] = delay_timer;
+}
+
+void Chip8::execFX0A() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    int key_num = 0;
+    for (uint8_t key : keypad) {
+        if (key) {
+            V[X] = key_num;
+            return;
+        }
+        key_num++;
+    }
+    pc -= 2;
+}
+
+void Chip8::execFX15() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    delay_timer = V[X];
+}
+
+void Chip8::execFX18() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    sound_timer = V[X];
+}
+
+void Chip8::execFX1E() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint16_t sum = V[X] + I;
+    if (sum > 0xFFF) {
+        V[0xF] = 1;
+    }
+    else {
+        V[0xF] = 0;
+    }
+
+    I += V[X];
+}
+
+void Chip8::execFX29() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    I = FONTSET_START_ADDRESS + (5 * V[X]);
+}
+
+void Chip8::execFX33() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t value = V[X];
+    // Ones-place
+    memory[I + 2] = value % 10;
+    value /= 10;
+
+    // Tens-place
+    memory[I + 1] = value % 10;
+    value /= 10;
+
+    // Hundreds-place
+    memory[I] = value % 10;
+}
+
+void Chip8::execFX55() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    for (uint8_t i = 0; i <= X; ++i) {
+        memory[I + i] = V[i];
+    }
+}
+
+void Chip8::execFX65() {
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    for (uint8_t i = 0; i <= X; ++i) {
+        V[i] = memory[I + i];
+    }
+}
+
+void Chip8::setKeys() {
+
+}
+
+void Chip8::setupGraphics() {
+
+}
+
+void Chip8::setupInput() {
+
+}
+
+void Chip8::drawGraphics() {
+    drawFlag = 0;
+}
+
+bool Chip8::getDrawFlag() const {
+    return drawFlag;
+}
