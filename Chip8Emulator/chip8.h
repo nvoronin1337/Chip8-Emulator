@@ -13,7 +13,8 @@
 
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int REGISTERS = 16;  
-const unsigned int RESOLUTION = 2048;
+const unsigned int VIDEO_HEIGHT = 32;
+const unsigned int VIDEO_WIDTH = 64;
 const unsigned int STACK_LEVELS = 16;
 const unsigned int KEYS = 16;
 const unsigned int FONTSET = 80;
@@ -27,25 +28,18 @@ const unsigned int FONTSET = 80;
 
 class Chip8 {
 private:
-    uint16_t opcode;
     uint8_t memory[MEMORY_SIZE]{};
 
-    uint8_t V[REGISTERS]; // V0 up to VE
+    uint8_t V[REGISTERS]{}; // V0 up to VE
 
-    uint16_t I;   // Index register
-    uint16_t pc;  // program counter
+    uint16_t I{};   // Index register
+    uint16_t pc{};  // program counter
 
-    uint32_t gfx[RESOLUTION];
+    uint8_t delay_timer{};
+    uint8_t sound_timer{};
 
-    uint8_t delay_timer;
-    uint8_t sound_timer;
-
-    uint16_t stack[STACK_LEVELS];
-    uint8_t sp;
-
-    uint8_t keypad[KEYS];
-
-    bool drawFlag = false;
+    uint16_t stack[STACK_LEVELS]{};
+    uint8_t sp{};
 
     //opcode functions
     void op_null() { printf("Unknown opcode\n"); };
@@ -103,16 +97,13 @@ private:
     OpcodeFunction tableF[0x65 + 1] = { &Chip8::op_null };
 
 public:
+    uint32_t gfx[VIDEO_HEIGHT * VIDEO_WIDTH]{};
+    uint8_t keypad[KEYS]{};
+    uint16_t opcode{};
+
     void initialize();
     void setupOpcodeTables();
     void loadProgram(const char* filename);
     void emulateCycle();
-    
-    void setKeys();
-    void setupGraphics();
-    void setupInput();
-    void drawGraphics();
-
-    bool getDrawFlag() const;
 };
 #endif

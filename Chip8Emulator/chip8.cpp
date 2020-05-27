@@ -1,5 +1,9 @@
 #include "chip8.h"
 
+#define DEBUG 1
+#if DEBUG
+#include <iostream>
+#endif
 const unsigned int START_ADDRESS = 0x200;
 const unsigned int FONTSET_START_ADDRESS = 0x50;
 
@@ -31,14 +35,17 @@ const uint8_t chip8_fontset[FONTSET] = {
 };
 
 void Chip8::Table0() {
+    std::cout << "Table0 called\n";
     ((*this).*(table0[opcode & 0x000Fu]))();
 }
 
 void Chip8::Table8() {
+    std::cout << "Table8 called\n";
     ((*this).*(table8[opcode & 0x000Fu]))();
 }
 
 void Chip8::TableE() {
+    std::cout << "TableE called\n";
     ((*this).*(tableE[opcode & 0x000Fu]))();
 }
 
@@ -77,8 +84,8 @@ void Chip8::setupOpcodeTables() {
     table8[0x7] = &Chip8::exec8XY7;
     table8[0xE] = &Chip8::exec8XYE;
 
-    tableE[0xE] = &Chip8::execEX9E;
     tableE[0x1] = &Chip8::execEXA1;
+    tableE[0xE] = &Chip8::execEX9E;
 
     tableF[0x07] = &Chip8::execFX07;
     tableF[0x0A] = &Chip8::execFX0A;
@@ -93,24 +100,8 @@ void Chip8::setupOpcodeTables() {
 
 void Chip8::initialize() {
     pc = START_ADDRESS;
-    opcode = 0;
-    I = 0;
-    sp = 0;
-    
-    // Clear display
-    // Clear stack
-    // Clear registers V0-VF
-    // Clear memory
-    memset(gfx, 0, sizeof(gfx));
-    memset(stack, 0, sizeof(stack));
-    memset(V, 0, sizeof(V));
-    memset(memory, 0, sizeof(memory));
 
-    // Reset timers
-    delay_timer = 0;
-    sound_timer = 0;
-
-    for (unsigned int i = 0; i < FONTSET; i++) {
+    for (unsigned int i = 0; i < FONTSET; ++i) {
         memory[FONTSET_START_ADDRESS + i] = chip8_fontset[i];
     }
 
@@ -139,7 +130,9 @@ void Chip8::loadProgram(const char* filename) {
 
 void Chip8::emulateCycle() {
     // Fetch opcode
-    opcode = memory[pc] << 8 | memory[pc + 1];  
+    opcode = (memory[pc] << 8u) | memory[pc + 1];  
+
+    //std::cout << "value is " << unsigned(opcode) << std::endl;
 
     pc += 2;
 
@@ -150,20 +143,12 @@ void Chip8::emulateCycle() {
     if (delay_timer > 0)
         --delay_timer;
 
-    if (sound_timer > 0) {
-        if (sound_timer == 1) {
-            printf("BEEP!\n");
-            --sound_timer;
-        }
-        else {
-            printf("NO BEEP!\n");
-        }
-    }
+    if (sound_timer > 0) 
+        --sound_timer;
 }
 
 void Chip8::exec00E0() {
-    memset(gfx, 0, sizeof gfx);
-    drawFlag = 1;
+    memset(gfx, 0, sizeof(gfx));
 }
 
 void Chip8::exec00EE() {
@@ -172,13 +157,15 @@ void Chip8::exec00EE() {
 }
 
 void Chip8::exec1NNN() {
-    pc = opcode & 0x0FFFu;
+    uint16_t address = opcode & 0x0FFFu;
+    pc = address;
 }
 
 void Chip8::exec2NNN() {
+    uint16_t address = opcode & 0x0FFFu;
     stack[sp] = pc;
     ++sp;
-    pc = opcode & 0x0FFFu;
+    pc = address;
 }
 
 void Chip8::exec3XNN() {
@@ -198,8 +185,8 @@ void Chip8::exec4XNN() {
 }
 
 void Chip8::exec5XY0() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x0F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     if (V[X] == V[Y]) {
         pc += 2;
@@ -207,53 +194,53 @@ void Chip8::exec5XY0() {
 }
 
 void Chip8::exec6XNN() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t NN = (opcode & 0x00FF);
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t NN = opcode & 0x00FFu;
 
     V[X] = NN;
 }
 
 void Chip8::exec7XNN() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t NN = (opcode & 0x00FF);
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t NN = (opcode & 0x00FFu);
 
     V[X] += NN;
 }
 
 void Chip8::exec8XY0() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     V[X] = V[Y];
 }
 
 void Chip8::exec8XY1() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     V[X] |= V[Y];
 }
 
 void Chip8::exec8XY2() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     V[X] &= V[Y];
 }
 
 void Chip8::exec8XY3() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     V[X] ^= V[Y];
 }
 
 void Chip8::exec8XY4() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     uint16_t sum = V[X] + V[Y];
-    if (sum > 255u) {
+    if (sum > 255U) {
         V[0xF] = 1;
     }
     else {
@@ -264,8 +251,8 @@ void Chip8::exec8XY4() {
 }
 
 void Chip8::exec8XY5() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
     
     if (V[X] > V[Y]) {
         V[0xF] = 1;
@@ -278,15 +265,15 @@ void Chip8::exec8XY5() {
 }
 
 void Chip8::exec8XY6() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
 
     V[0xF] = (V[X] & 0x1u);
     V[X] >>= 1;
 }
 
 void Chip8::exec8XY7() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     if (V[Y] > V[X]) {
         V[0xF] = 1;
@@ -294,18 +281,20 @@ void Chip8::exec8XY7() {
     else {
         V[0xF] = 0;
     }
+
+    V[X] = V[Y] - V[X];
 }
 
 void Chip8::exec8XYE() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
 
-    V[0xF] = (V[X] & 0x1u);
-    V[X] << 1;
+    V[0xF] = (V[X] & 0x80u) >> 7u;
+    V[X] <<= 1;
 }
 
 void Chip8::exec9XY0() {
-    uint8_t X = (opcode & 0x0F00) >> 8u;
-    uint8_t Y = (opcode & 0x00F0) >> 4u;
+    uint8_t X = (opcode & 0x0F00u) >> 8u;
+    uint8_t Y = (opcode & 0x00F0u) >> 4u;
 
     if (V[X] != V[Y]) {
         pc += 2;
@@ -331,25 +320,38 @@ void Chip8::execCXNN() {
 }
 
 void Chip8::execDXYN() {
-    // draws sprite
     uint8_t X = (opcode & 0x0F00u) >> 8u;
     uint8_t Y = (opcode & 0x00F0u) >> 4u;
     uint8_t height = opcode & 0x000Fu;
-    uint8_t pixel;
+
+    uint8_t xPos = V[X] % VIDEO_WIDTH;
+    uint8_t yPos = V[Y] % VIDEO_HEIGHT;
 
     V[0xF] = 0;
-    for (int row = 0; row < height; row++) {
-        pixel = memory[I + row];
-        for (int col = 0; col < SPRAY_LENGTH; col++) {
-            if ((pixel & (0x80 >> col)) != 0) {
-                if (gfx[X + col + ((Y + row) * 64)] == 1) 
-                    V[0xF] = 0;
-                gfx[X + col + ((Y + row) * 64)] ^= 1;
+
+    for (unsigned int row = 0; row < height; ++row)
+    {
+        uint8_t spriteByte = memory[I + row];
+
+        for (unsigned int col = 0; col < 8; ++col)
+        {
+            uint8_t spritePixel = spriteByte & (0x80u >> col);
+            uint32_t* screenPixel = &gfx[(yPos + row) * VIDEO_WIDTH + (xPos + col)];
+
+            // Sprite pixel is on
+            if (spritePixel)
+            {
+                // Screen pixel also on - collision
+                if (*screenPixel == 0xFFFFFFFF)
+                {
+                    V[0xF] = 1;
+                }
+
+                // Effectively XOR with the sprite pixel
+                *screenPixel ^= 0xFFFFFFFF;
             }
         }
     }
-
-    drawFlag = true;
 }
 
 void Chip8::execEX9E() {
@@ -398,14 +400,6 @@ void Chip8::execFX18() {
 
 void Chip8::execFX1E() {
     uint8_t X = (opcode & 0x0F00u) >> 8u;
-    uint16_t sum = V[X] + I;
-    if (sum > 0xFFF) {
-        V[0xF] = 1;
-    }
-    else {
-        V[0xF] = 0;
-    }
-
     I += V[X];
 }
 
@@ -441,24 +435,4 @@ void Chip8::execFX65() {
     for (uint8_t i = 0; i <= X; ++i) {
         V[i] = memory[I + i];
     }
-}
-
-void Chip8::setKeys() {
-
-}
-
-void Chip8::setupGraphics() {
-
-}
-
-void Chip8::setupInput() {
-
-}
-
-void Chip8::drawGraphics() {
-    drawFlag = 0;
-}
-
-bool Chip8::getDrawFlag() const {
-    return drawFlag;
 }
