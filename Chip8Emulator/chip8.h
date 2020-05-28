@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <time.h>
 #include <cstring>
-//#include <iostream>
 
 const unsigned int MEMORY_SIZE = 4096;
 const unsigned int REGISTERS = 16;  

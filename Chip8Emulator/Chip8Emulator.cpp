@@ -1,19 +1,10 @@
-// Chip8Emulator.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <stdlib.h>
 #include <stdexcept>
 #include "chip8.h"
 #include "sdl2_platform.h"
+#include <chrono>
 
-// DEBUGGING 
-#define DEBUG 1
-#if DEBUG 
-#define TEST_PROGRAM "Airplane.ch8"
-#include <iostream>
-#define deb(x) std::cout << x << "\n"
-#endif
-
+const int CYCLE_DELAY = 1.5;
 const char* TITLE = "Chip8 Emulator";
 
 int main(int argc, char* argv[]) {
@@ -32,14 +23,18 @@ int main(int argc, char* argv[]) {
         int videoPitch = sizeof(chip8.gfx[0]) * VIDEO_WIDTH;
         bool quit = false;
 
+        auto lastCycleTime = std::chrono::high_resolution_clock::now();
+
         while (!quit) {
             quit = platform.ProcessInput(chip8.keypad);
-
-            chip8.emulateCycle();
-            platform.Update(chip8.gfx, videoPitch);
-
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            float dt = std::chrono::duration<float, std::chrono::milliseconds::period>(currentTime - lastCycleTime).count();
+            if (dt > CYCLE_DELAY) {
+                lastCycleTime = currentTime;
+                chip8.emulateCycle();
+                platform.Update(chip8.gfx, videoPitch);
+            }
         }
-        
     }
     return EXIT_SUCCESS;
 }

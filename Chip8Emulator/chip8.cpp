@@ -1,9 +1,5 @@
 #include "chip8.h"
 
-#define DEBUG 1
-#if DEBUG
-#include <iostream>
-#endif
 const unsigned int START_ADDRESS = 0x200;
 const unsigned int FONTSET_START_ADDRESS = 0x50;
 
@@ -35,17 +31,14 @@ const uint8_t chip8_fontset[FONTSET] = {
 };
 
 void Chip8::Table0() {
-    std::cout << "Table0 called\n";
     ((*this).*(table0[opcode & 0x000Fu]))();
 }
 
 void Chip8::Table8() {
-    std::cout << "Table8 called\n";
     ((*this).*(table8[opcode & 0x000Fu]))();
 }
 
 void Chip8::TableE() {
-    std::cout << "TableE called\n";
     ((*this).*(tableE[opcode & 0x000Fu]))();
 }
 
@@ -131,8 +124,6 @@ void Chip8::loadProgram(const char* filename) {
 void Chip8::emulateCycle() {
     // Fetch opcode
     opcode = (memory[pc] << 8u) | memory[pc + 1];  
-
-    //std::cout << "value is " << unsigned(opcode) << std::endl;
 
     pc += 2;
 

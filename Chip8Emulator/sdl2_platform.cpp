@@ -23,7 +23,6 @@ void SDL_Platform::Update(void const* buffer, int pitch) {
 
 bool SDL_Platform::ProcessInput(uint8_t* keys) {
 	bool quit = false;
-
 	SDL_Event event;
 
 	while (SDL_PollEvent(&event))
@@ -213,6 +212,5 @@ bool SDL_Platform::ProcessInput(uint8_t* keys) {
 		} break;
 		}
 	}
-
 	return quit;
 }

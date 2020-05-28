@@ -18,5 +18,4 @@ public:
 	void Update(void const* buffer, int pitch);
 	bool ProcessInput(uint8_t* keys);
 };
-
 #endif
